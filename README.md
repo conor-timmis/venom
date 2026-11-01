@@ -1,8 +1,8 @@
-# Venom
+# [Venom](https://venom.cx) - Multi-platform chat application for livestreams
 
-Native desktop chat for people who watch and run livestreams across more than one platform.
+Native desktop chat for people who watch and run livestreams across more than one platform, just for clarity, the site repo is private, this contains nothing of the website, though the App is open-source for anyone to review, look into, stare into the void, all of that jazz.
 
-Venom is a client that pulls **Twitch**, **Kick**, and **YouTube Live** into one customisable workspace. The planned build is in Rust with a Slint UI so it stays fast and light, the idea is to maintain high performance throughout.
+Venom is a client that pulls **Twitch**, **Kick**, and **YouTube Live** into one customisable workspace. The planned build is in Rust with a Slint UI so it stays fast and light, the idea is to maintain high performance throughout development.
 
 **Who it's for:** streamers, moderators, and chat-focused viewers who want one native window instead of a pile of browser tabs.
 
