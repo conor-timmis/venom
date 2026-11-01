@@ -2,5 +2,12 @@
 name = "venom"
 version = "0.1.0"
 edition = "2024"
+rust-version.workspace = true
 
 [dependencies]
+slint = "=1.12.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[build-dependencies]
+slint-build = "=1.12.1"
