@@ -1,0 +1,2 @@
+# Fail scans on errors, but report existing warnings without blocking.
+blocking = "error"
