@@ -1,0 +1,9 @@
+# Project-local cargo-audit policy.
+#
+# These IDs are INFO unmaintained advisories with no patched release.
+# They remain in the lockfile through Slint 1.18.1 (latest on crates.io)
+# and its winit / AccessKit / typed-index-collections tree. Revisit on
+# the next Slint release.
+
+[advisories]
+ignore = []

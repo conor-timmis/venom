@@ -3,4 +3,7 @@ members = ["apps/venom"]
 resolver = "2"
 
 [workspace.package]
-rust-version = "1.86"
+rust-version = "1.99"
+
+[profile.release]
+overflow-checks = true
