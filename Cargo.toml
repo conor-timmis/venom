@@ -1,9 +1,29 @@
 [workspace]
-members = ["apps/venom"]
+members = ["apps/venom", "crates/venom-core", "crates/venom-domain"]
 resolver = "2"
 
 [workspace.package]
 rust-version = "1.99"
+
+[workspace.dependencies]
+fastrand = "2.5"
+slint = "=1.18.1"
+time = { version = "0.3", features = ["local-offset"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+venom-core = { path = "crates/venom-core" }
+venom-domain = { path = "crates/venom-domain" }
+
+[workspace.lints.rust]
+# `deny` rather than `forbid`: Slint's generated code emits scoped
+# `allow(unsafe_code)` blocks for its FFI glue. Hand-written crates still fail
+# the build on any unsafe code.
+unsafe_code = "deny"
+
+[workspace.lints.clippy]
+dbg_macro = "deny"
+todo = "deny"
+unimplemented = "deny"
 
 [profile.release]
 overflow-checks = true

@@ -1,0 +1,13 @@
+[package]
+name = "venom-core"
+version = "0.1.0"
+edition = "2024"
+rust-version.workspace = true
+
+[dependencies]
+fastrand.workspace = true
+time.workspace = true
+venom-domain.workspace = true
+
+[lints]
+workspace = true
