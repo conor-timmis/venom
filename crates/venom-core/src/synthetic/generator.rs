@@ -10,8 +10,8 @@ use std::collections::VecDeque;
 use fastrand::Rng;
 use time::{Duration, OffsetDateTime};
 use venom_domain::{
-    Channel, ChannelId, ChatMessage, ChatMessageParts, ChatUser, MessageId, MessageSegment,
-    Platform, UserId,
+    BadgeKind, Channel, ChannelId, ChatMessage, ChatMessageParts, ChatUser, MessageBadge,
+    MessageId, MessageSegment, Platform, UserId,
 };
 
 use super::{
@@ -187,6 +187,7 @@ impl ChannelFeed {
                     channel.id.as_str()
                 );
                 ChatUser::new(UserId::new(user_id), *name)
+                    .with_badges(badges_for(channel.platform, index))
             })
             .collect();
 
@@ -196,6 +197,32 @@ impl ChannelFeed {
             recent_ids: VecDeque::with_capacity(REPLY_HISTORY),
         }
     }
+}
+
+/// Assigns a deterministic, varied badge set to a synthetic author.
+///
+/// The rules are deliberately spread across the roster so every badge kind
+/// appears without needing a much larger author pool.
+fn badges_for(platform: Platform, index: usize) -> Vec<MessageBadge> {
+    names::BADGES
+        .iter()
+        .filter(|spec| match spec.kind {
+            BadgeKind::Broadcaster => index == 0,
+            BadgeKind::Moderator => index != 0 && index.is_multiple_of(6),
+            BadgeKind::Vip => index % 5 == 2,
+            BadgeKind::Subscriber => index.is_multiple_of(3),
+            BadgeKind::Prime => index % 13 == 4,
+            BadgeKind::Staff => index % 19 == 8,
+            BadgeKind::Other => false,
+        })
+        .map(|spec| {
+            MessageBadge::new(
+                format!("{}:{}", platform.as_str(), spec.id),
+                spec.label,
+                spec.kind,
+            )
+        })
+        .collect()
 }
 
 fn choose_reply(rng: &mut Rng, recent_ids: &VecDeque<MessageId>) -> Option<MessageId> {
@@ -221,7 +248,7 @@ mod tests {
 
     use super::SyntheticChatGenerator;
     use crate::synthetic::SyntheticConfig;
-    use venom_domain::{Channel, Platform};
+    use venom_domain::{BadgeKind, Channel, Platform};
 
     fn generator(seed: u64) -> SyntheticChatGenerator {
         let config = SyntheticConfig::new(seed, crate::synthetic::default_channels())
@@ -374,5 +401,37 @@ mod tests {
     #[test]
     fn take_zero_returns_an_empty_batch() {
         assert!(generator(29).take(0).is_empty());
+    }
+
+    #[test]
+    fn authors_carry_platform_scoped_badges() {
+        let messages = generator(31).take(5_000);
+
+        assert!(
+            messages
+                .iter()
+                .any(|message| !message.author().badges().is_empty())
+        );
+        assert!(messages.iter().all(|message| {
+            message.author().badges().iter().all(|badge| {
+                badge.id().starts_with(message.platform().as_str()) && !badge.label().is_empty()
+            })
+        }));
+    }
+
+    #[test]
+    fn every_synthetic_badge_kind_appears() {
+        let messages = generator(37).take(5_000);
+        let kinds: HashSet<_> = messages
+            .iter()
+            .flat_map(|message| message.author().badges().iter().map(|badge| badge.kind()))
+            .collect();
+
+        assert!(kinds.contains(&BadgeKind::Broadcaster));
+        assert!(kinds.contains(&BadgeKind::Moderator));
+        assert!(kinds.contains(&BadgeKind::Vip));
+        assert!(kinds.contains(&BadgeKind::Subscriber));
+        assert!(kinds.contains(&BadgeKind::Prime));
+        assert!(kinds.contains(&BadgeKind::Staff));
     }
 }

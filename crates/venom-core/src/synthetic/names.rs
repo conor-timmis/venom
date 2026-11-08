@@ -4,11 +4,17 @@
 //! ordering. Pools are deliberately small but varied enough to exercise wrapped
 //! rows, short one-liners, emotes, links, and mentions.
 
-use venom_domain::EmoteProvider;
+use venom_domain::{BadgeKind, EmoteProvider};
 
 pub(super) struct EmoteSpec {
     pub name: &'static str,
     pub provider: EmoteProvider,
+}
+
+pub(super) struct BadgeSpec {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub kind: BadgeKind,
 }
 
 pub(super) struct LinkSpec {
@@ -138,6 +144,59 @@ pub(super) const EMOTES: &[EmoteSpec] = &[
         name: "PogU",
         provider: EmoteProvider::SevenTv,
     },
+    EmoteSpec {
+        name: "Pog",
+        provider: EmoteProvider::YouTube,
+    },
+    EmoteSpec {
+        name: "Hype",
+        provider: EmoteProvider::Kick,
+    },
+    EmoteSpec {
+        name: "PartyParrot",
+        provider: EmoteProvider::BetterTv,
+    },
+    EmoteSpec {
+        name: "DanceTime",
+        provider: EmoteProvider::SevenTv,
+    },
+];
+
+/// Badge catalogue shared by every synthetic platform.
+///
+/// Only the identifier is platform-scoped; the label and category are shared
+/// so the renderer sees the same badge contract from every channel.
+pub(super) const BADGES: &[BadgeSpec] = &[
+    BadgeSpec {
+        id: "broadcaster",
+        label: "HOST",
+        kind: BadgeKind::Broadcaster,
+    },
+    BadgeSpec {
+        id: "moderator",
+        label: "MOD",
+        kind: BadgeKind::Moderator,
+    },
+    BadgeSpec {
+        id: "vip",
+        label: "VIP",
+        kind: BadgeKind::Vip,
+    },
+    BadgeSpec {
+        id: "subscriber",
+        label: "SUB",
+        kind: BadgeKind::Subscriber,
+    },
+    BadgeSpec {
+        id: "prime",
+        label: "PRIME",
+        kind: BadgeKind::Prime,
+    },
+    BadgeSpec {
+        id: "staff",
+        label: "STAFF",
+        kind: BadgeKind::Staff,
+    },
 ];
 
 pub(super) const LINKS: &[LinkSpec] = &[
@@ -161,7 +220,9 @@ pub(super) const LINKS: &[LinkSpec] = &[
 
 #[cfg(test)]
 mod tests {
-    use super::{EMOTES, LINKS, LONG_MESSAGES, MEDIUM_MESSAGES, SHORT_MESSAGES, USER_NAMES};
+    use super::{
+        BADGES, EMOTES, LINKS, LONG_MESSAGES, MEDIUM_MESSAGES, SHORT_MESSAGES, USER_NAMES,
+    };
 
     #[test]
     fn content_pools_are_not_empty() {
@@ -171,6 +232,7 @@ mod tests {
         assert!(!LONG_MESSAGES.is_empty());
         assert!(!EMOTES.is_empty());
         assert!(!LINKS.is_empty());
+        assert!(!BADGES.is_empty());
     }
 
     #[test]
@@ -191,6 +253,15 @@ mod tests {
             LINKS
                 .iter()
                 .all(|link| !link.label.is_empty() && link.url.starts_with("https://"))
+        );
+    }
+
+    #[test]
+    fn badge_metadata_is_complete() {
+        assert!(
+            BADGES
+                .iter()
+                .all(|badge| !badge.id.is_empty() && !badge.label.is_empty())
         );
     }
 }
