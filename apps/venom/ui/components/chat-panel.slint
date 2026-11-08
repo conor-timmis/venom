@@ -1,0 +1,67 @@
+import { ListView } from "std-widgets.slint";
+import { ChatRow } from "../types.slint";
+import { Theme } from "../theme.slint";
+import { MessageRow } from "message-row.slint";
+
+export component ChatPanel inherits Rectangle {
+    in property <[ChatRow]> messages;
+    in property <int> revision;
+    in-out property <bool> follow-output: true;
+    callback row-created();
+
+    background: Theme.row-background;
+
+    list := ListView {
+        for message in root.messages : MessageRow {
+            message: message;
+            created => {
+                root.row-created();
+            }
+        }
+
+        // Stick to the newest row while the user is already at the bottom.
+        changed content-height => {
+            if (root.follow-output) {
+                list.content-y = min(0px, list.visible-height - list.content-height);
+            }
+        }
+
+        scrolled => {
+            root.follow-output = list.content-height <= list.visible-height
+                || list.content-y <= list.visible-height - list.content-height + Theme.follow-threshold;
+        }
+    }
+
+    // `revision` changes even when retention keeps the visible row count stable.
+    changed revision => {
+        if (root.follow-output) {
+            list.content-y = min(0px, list.visible-height - list.content-height);
+        }
+    }
+
+    if (!root.follow-output && root.messages.length > 0) : Rectangle {
+        x: parent.width - self.width - 18px;
+        y: parent.height - self.height - 18px;
+        width: 150px;
+        height: 32px;
+        border-radius: 16px;
+        background: Theme.accent;
+
+        Text {
+            text: "Jump to latest";
+            color: #ffffff;
+            font-size: 12px;
+            font-weight: 600;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+
+        TouchArea {
+            mouse-cursor: pointer;
+            clicked => {
+                root.follow-output = true;
+                list.content-y = min(0px, list.visible-height - list.content-height);
+            }
+        }
+    }
+}

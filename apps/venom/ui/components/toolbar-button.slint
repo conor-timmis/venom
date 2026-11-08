@@ -1,0 +1,28 @@
+import { Theme } from "../theme.slint";
+
+export component ToolbarButton inherits Rectangle {
+    in property <string> label;
+    in property <bool> selected: false;
+    callback clicked();
+
+    width: 66px;
+    height: 30px;
+    border-radius: 6px;
+    background: touch.has-hover ? Theme.button-hover : (root.selected ? Theme.accent : Theme.button-background);
+
+    Text {
+        text: root.label;
+        color: root.selected ? #ffffff : Theme.text-primary;
+        font-size: 12px;
+        font-weight: 600;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
+}

@@ -1,11 +1,182 @@
-export component MainWindow inherits Window {
-    title: "Venom";
-    width: 800px;
-    height: 600px;
+import { ChatRow } from "types.slint";
+import { Theme } from "theme.slint";
+import { ChatPanel } from "components/chat-panel.slint";
+import { ToolbarButton } from "components/toolbar-button.slint";
 
-    Text {
-        text: "Venom";
-        horizontal-alignment: center;
-        vertical-alignment: center;
+export component MainWindow inherits Window {
+    title: "Venom - Chat Rendering Prototype";
+    width: 1180px;
+    height: 760px;
+    background: Theme.window-background;
+
+    in property <[ChatRow]> messages;
+    in-out property <int> retained-count: 0;
+    in-out property <int> retention-limit: 10000;
+    in-out property <string> generated-label: "0";
+    in-out property <string> evicted-label: "0";
+    in-out property <int> last-insert-micros: 0;
+    in-out property <int> worst-insert-micros: 0;
+    in-out property <int> rows-created: 0;
+    in-out property <int> live-rate: 0;
+    in-out property <bool> follow-output: true;
+    // Bumped after every feed update so the list can re-apply follow mode even
+    // when retention keeps the visible row count stable.
+    in-out property <int> revision: 0;
+
+    callback set-live-rate(int);
+    callback add-messages(int);
+    callback clear-messages();
+    callback load-history();
+    callback tick();
+    callback row-created();
+
+    // The feed and this timer share the 20 Hz cadence configured in Rust.
+    Timer {
+        interval: 50ms;
+        running: root.live-rate != 0;
+        triggered => {
+            root.tick();
+        }
+    }
+
+    VerticalLayout {
+        Rectangle {
+            height: 62px;
+            background: Theme.panel-background;
+
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 14px;
+
+                Text {
+                    text: "VENOM";
+                    color: Theme.accent;
+                    font-size: 22px;
+                    font-weight: 800;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: "chat renderer prototype";
+                    color: Theme.text-muted;
+                    font-size: 12px;
+                    vertical-alignment: center;
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                    height: 1px;
+                }
+
+                Text {
+                    text: "\{root.retained-count} / \{root.retention-limit} retained  ·  \{root.rows-created} rows created";
+                    color: Theme.text-muted;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: "insert \{root.last-insert-micros} us  ·  worst \{root.worst-insert-micros} us";
+                    color: Theme.text-muted;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: root.live-rate == 0 ? "paused" : "\{root.live-rate} msg/s";
+                    color: root.live-rate == 0 ? Theme.text-muted : Theme.accent;
+                    font-size: 11px;
+                    font-weight: 600;
+                    vertical-alignment: center;
+                }
+            }
+        }
+
+        ChatPanel {
+            vertical-stretch: 1;
+            messages: root.messages;
+            revision: root.revision;
+            follow-output <=> root.follow-output;
+            row-created => {
+                root.row-created();
+            }
+        }
+
+        Rectangle {
+            height: 56px;
+            background: Theme.panel-background;
+
+            HorizontalLayout {
+                padding-left: 18px;
+                padding-right: 18px;
+                spacing: 8px;
+
+                ToolbarButton {
+                    label: "Pause";
+                    selected: root.live-rate == 0;
+                    clicked => {
+                        root.set-live-rate(0);
+                    }
+                }
+
+                ToolbarButton {
+                    label: "30/s";
+                    selected: root.live-rate == 30;
+                    clicked => {
+                        root.set-live-rate(30);
+                    }
+                }
+
+                ToolbarButton {
+                    label: "60/s";
+                    selected: root.live-rate == 60;
+                    clicked => {
+                        root.set-live-rate(60);
+                    }
+                }
+
+                ToolbarButton {
+                    label: "120/s";
+                    selected: root.live-rate == 120;
+                    clicked => {
+                        root.set-live-rate(120);
+                    }
+                }
+
+                ToolbarButton {
+                    label: "Add 1k";
+                    clicked => {
+                        root.add-messages(1000);
+                    }
+                }
+
+                ToolbarButton {
+                    label: "Reset";
+                    clicked => {
+                        root.load-history();
+                    }
+                }
+
+                ToolbarButton {
+                    label: "Clear";
+                    clicked => {
+                        root.clear-messages();
+                    }
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                    height: 1px;
+                }
+
+                Text {
+                    text: "generated \{root.generated-label}  ·  evicted \{root.evicted-label}";
+                    color: Theme.text-muted;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                }
+            }
+        }
     }
 }

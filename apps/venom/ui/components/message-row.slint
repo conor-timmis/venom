@@ -1,0 +1,78 @@
+import { ChatRow } from "../types.slint";
+import { Theme } from "../theme.slint";
+
+export component MessageRow inherits Rectangle {
+    in property <ChatRow> message;
+    callback created();
+
+    init => {
+        root.created();
+    }
+
+    height: content.preferred-height;
+    background: Theme.row-background;
+
+    content := VerticalLayout {
+        padding-left: 16px;
+        padding-right: 16px;
+        padding-top: 7px;
+        padding-bottom: 7px;
+        spacing: 2px;
+
+        HorizontalLayout {
+            spacing: 7px;
+
+            Text {
+                text: message.timestamp;
+                color: Theme.text-muted;
+                font-size: 11px;
+                vertical-alignment: bottom;
+            }
+
+            Text {
+                text: message.platform-label;
+                color: message.platform-accent;
+                font-size: 10px;
+                font-weight: 700;
+                vertical-alignment: bottom;
+            }
+
+            Text {
+                text: message.author;
+                color: message.author-color;
+                font-size: 13px;
+                font-weight: 700;
+                vertical-alignment: bottom;
+            }
+        }
+
+        if (message.reply-preview != "") : Text {
+            text: message.reply-preview;
+            color: Theme.text-muted;
+            font-size: 11px;
+            overflow: elide;
+        }
+
+        Text {
+            text: message.body;
+            color: Theme.text-primary;
+            font-size: 14px;
+            wrap: word-wrap;
+        }
+    }
+
+    Rectangle {
+        x: 0;
+        y: 0;
+        width: 3px;
+        height: parent.height;
+        background: message.platform-accent;
+    }
+
+    Rectangle {
+        y: parent.height - 1px;
+        width: parent.width;
+        height: 1px;
+        background: Theme.divider;
+    }
+}
