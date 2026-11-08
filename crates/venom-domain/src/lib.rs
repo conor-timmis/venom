@@ -8,12 +8,14 @@
 //! Phase 0 uses these types for the synthetic rendering prototype. Later phases
 //! add real adapters and storage on top of the same contracts.
 
+mod badge;
 mod channel;
 mod ids;
 mod message;
 mod platform;
 mod user;
 
+pub use badge::{BadgeKind, MessageBadge};
 pub use channel::Channel;
 pub use ids::{ChannelId, MessageId, UserId};
 pub use message::{ChatMessage, ChatMessageParts, EmoteProvider, MessageSegment};
