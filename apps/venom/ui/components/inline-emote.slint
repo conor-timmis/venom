@@ -1,0 +1,22 @@
+// Inline emote with a frame sequence.
+//
+// Only visible rows are instantiated by Slint's ListView, so the timer exists
+// only while the row is in (or near) the viewport (MAIN.md §10.6, ADR-007).
+export component InlineEmote inherits Image {
+    in property <[image]> frames;
+    in property <int> frame-delay: 140;
+    in property <image> fallback;
+    in-out property <int> frame-index: 0;
+
+    width: 20px;
+    height: 20px;
+    source: frames.length > 0 ? frames[Math.mod(frame-index, frames.length)] : fallback;
+
+    Timer {
+        interval: frame-delay * 1ms;
+        running: frames.length > 1;
+        triggered => {
+            frame-index = Math.mod(frame-index + 1, frames.length);
+        }
+    }
+}

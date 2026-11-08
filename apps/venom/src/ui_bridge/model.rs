@@ -134,7 +134,7 @@ impl Model for MessageListModel {
 
 #[cfg(test)]
 mod tests {
-    use slint::{Color, Model, SharedString};
+    use slint::{Color, Model, ModelRc, SharedString};
 
     use super::{MessageEntry, MessageListModel};
     use crate::ChatRow;
@@ -144,10 +144,11 @@ mod tests {
         ChatRow {
             platform_label: SharedString::from("TWITCH"),
             platform_accent: Color::from_rgb_u8(0x9d, 0x6b, 0xff),
-            author: SharedString::from("tester"),
+            author: SharedString::from(format!("tester-{index}")),
             author_color: Color::from_rgb_u8(0xff, 0xff, 0xff),
+            badges: ModelRc::default(),
             timestamp: SharedString::from("18:30:00"),
-            body: SharedString::from(format!("message {index}")),
+            body: ModelRc::default(),
             reply_preview: SharedString::default(),
         }
     }
@@ -163,8 +164,14 @@ mod tests {
 
         assert!(evicted.is_empty());
         assert_eq!(model.row_count(), 3);
-        assert_eq!(model.row_data(0).expect("row 0").body.as_str(), "message 1");
-        assert_eq!(model.row_data(2).expect("row 2").body.as_str(), "message 3");
+        assert_eq!(
+            model.row_data(0).expect("row 0").author.as_str(),
+            "tester-1"
+        );
+        assert_eq!(
+            model.row_data(2).expect("row 2").author.as_str(),
+            "tester-3"
+        );
         assert!(model.row_data(3).is_none());
     }
 
@@ -183,8 +190,14 @@ mod tests {
                 .collect::<Vec<_>>(),
             ["message-1", "message-2"]
         );
-        assert_eq!(model.row_data(0).expect("row 0").body.as_str(), "message 3");
-        assert_eq!(model.row_data(2).expect("row 2").body.as_str(), "message 5");
+        assert_eq!(
+            model.row_data(0).expect("row 0").author.as_str(),
+            "tester-3"
+        );
+        assert_eq!(
+            model.row_data(2).expect("row 2").author.as_str(),
+            "tester-5"
+        );
     }
 
     #[test]
@@ -202,8 +215,14 @@ mod tests {
                 .collect::<Vec<_>>(),
             ["message-1", "message-2"]
         );
-        assert_eq!(model.row_data(0).expect("row 0").body.as_str(), "message 3");
-        assert_eq!(model.row_data(2).expect("row 2").body.as_str(), "message 5");
+        assert_eq!(
+            model.row_data(0).expect("row 0").author.as_str(),
+            "tester-3"
+        );
+        assert_eq!(
+            model.row_data(2).expect("row 2").author.as_str(),
+            "tester-5"
+        );
     }
 
     #[test]

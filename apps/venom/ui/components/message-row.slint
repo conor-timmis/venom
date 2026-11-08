@@ -1,5 +1,7 @@
-import { ChatRow } from "../types.slint";
+import { ChatRow, ChatSegmentKind } from "../types.slint";
 import { Theme } from "../theme.slint";
+import { BadgeView } from "badge.slint";
+import { InlineEmote } from "inline-emote.slint";
 
 export component MessageRow inherits Rectangle {
     in property <ChatRow> message;
@@ -37,6 +39,11 @@ export component MessageRow inherits Rectangle {
                 vertical-alignment: bottom;
             }
 
+            for badge in message.badges : BadgeView {
+                label: badge.label;
+                kind: badge.kind;
+            }
+
             Text {
                 text: message.author;
                 color: message.author-color;
@@ -53,11 +60,45 @@ export component MessageRow inherits Rectangle {
             overflow: elide;
         }
 
-        Text {
-            text: message.body;
-            color: Theme.text-primary;
-            font-size: 14px;
-            wrap: word-wrap;
+        // Pre-wrapped rich body. Each line is a horizontal run of text and
+        // inline emote elements.
+        VerticalLayout {
+            spacing: 1px;
+
+            for line in message.body : HorizontalLayout {
+                spacing: 4px;
+
+                for segment in line.segments : HorizontalLayout {
+                    spacing: 0px;
+
+                    if (segment.kind == ChatSegmentKind.text) : Text {
+                        text: segment.text;
+                        color: Theme.text-primary;
+                        font-size: 14px;
+                        wrap: no-wrap;
+                    }
+
+                    if (segment.kind == ChatSegmentKind.emote) : InlineEmote {
+                        frames: segment.frames;
+                        frame-delay: segment.frame-delay;
+                    }
+
+                    if (segment.kind == ChatSegmentKind.link) : Text {
+                        text: segment.text;
+                        color: Theme.accent;
+                        font-size: 14px;
+                        wrap: no-wrap;
+                    }
+
+                    if (segment.kind == ChatSegmentKind.mention) : Text {
+                        text: segment.text;
+                        color: Theme.accent;
+                        font-size: 14px;
+                        font-weight: 600;
+                        wrap: no-wrap;
+                    }
+                }
+            }
         }
     }
 

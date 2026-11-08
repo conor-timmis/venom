@@ -130,6 +130,13 @@ impl ChatView {
         window.set_evicted_label(SharedString::from(count_label(snapshot.evicted)));
         window.set_last_insert_micros(to_i32(snapshot.last_insert_micros));
         window.set_worst_insert_micros(to_i32(snapshot.worst_insert_micros));
+        window.set_asset_cache_label(SharedString::from(format!(
+            "emotes {}/{}  ·  cache {}h/{}m",
+            snapshot.asset_entries,
+            snapshot.asset_capacity,
+            snapshot.asset_hits,
+            snapshot.asset_misses
+        )));
         window.set_rows_created(to_i32(self.rows_created.get()));
         window.set_live_rate(to_i32(u64::from(snapshot.rate)));
         window.set_revision(to_i32(snapshot.generated));

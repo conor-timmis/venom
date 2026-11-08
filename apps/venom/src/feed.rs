@@ -15,11 +15,13 @@ use venom_core::{SyntheticChatGenerator, SyntheticConfig, SyntheticConfigError, 
 use venom_domain::MessageId;
 
 use crate::{
+    assets::{AssetStore, DEFAULT_CACHE_CAPACITY},
     config::{ALLOWED_LIVE_RATES, HarnessConfig, LIVE_TICK_HZ},
     format::Clock,
     metrics::InsertMetrics,
     ui_bridge::{
-        message_mapper::{self, ReplySummary},
+        layout::DEFAULT_BODY_WIDTH_PX,
+        message_mapper::{self, ReplySummary, RowContext},
         model::{MessageEntry, MessageListModel},
     },
 };
@@ -32,6 +34,10 @@ pub struct FeedSnapshot {
     pub last_insert_micros: u64,
     pub worst_insert_micros: u64,
     pub rate: u32,
+    pub asset_entries: usize,
+    pub asset_capacity: usize,
+    pub asset_hits: u64,
+    pub asset_misses: u64,
 }
 
 /// State shared by the UI bridge and the headless harness.
@@ -39,6 +45,7 @@ pub struct ChatFeed {
     generator: RefCell<SyntheticChatGenerator>,
     model: Rc<MessageListModel>,
     replies: RefCell<HashMap<MessageId, ReplySummary>>,
+    assets: RefCell<AssetStore>,
     clock: Clock,
     initial_messages: usize,
     rate: Cell<u32>,
@@ -56,6 +63,7 @@ impl ChatFeed {
             generator: RefCell::new(SyntheticChatGenerator::new(synthetic)),
             model: Rc::new(MessageListModel::new(config.retained_messages)),
             replies: RefCell::new(HashMap::new()),
+            assets: RefCell::new(AssetStore::new(DEFAULT_CACHE_CAPACITY)),
             clock,
             initial_messages: config.initial_messages,
             rate: Cell::new(config.live_rate),
@@ -79,6 +87,7 @@ impl ChatFeed {
     #[must_use]
     pub fn snapshot(&self) -> FeedSnapshot {
         let metrics = *self.metrics.borrow();
+        let assets = self.assets.borrow().stats();
         FeedSnapshot {
             retained: self.model.len(),
             generated: self.total_generated.get(),
@@ -86,6 +95,10 @@ impl ChatFeed {
             last_insert_micros: metrics.last_micros(),
             worst_insert_micros: metrics.worst_micros(),
             rate: self.rate.get(),
+            asset_entries: assets.entries,
+            asset_capacity: assets.capacity,
+            asset_hits: assets.hits,
+            asset_misses: assets.misses,
         }
     }
 
@@ -140,6 +153,12 @@ impl ChatFeed {
         let started = Instant::now();
         let generated = self.generator.borrow_mut().take(count);
         let mut entries = Vec::with_capacity(generated.len());
+        let mut assets = self.assets.borrow_mut();
+        let mut context = RowContext {
+            clock: self.clock,
+            body_width: DEFAULT_BODY_WIDTH_PX,
+            assets: &mut assets,
+        };
 
         {
             let mut replies = self.replies.borrow_mut();
@@ -148,7 +167,7 @@ impl ChatFeed {
                     .reply_to()
                     .and_then(|message_id| replies.get(message_id))
                     .cloned();
-                let row = message_mapper::to_chat_row(message, reply.as_ref(), self.clock);
+                let row = message_mapper::to_chat_row(message, reply.as_ref(), &mut context);
                 entries.push(MessageEntry::new(message.id().clone(), row));
                 replies.insert(message.id().clone(), ReplySummary::from_message(message));
             }
@@ -352,5 +371,18 @@ mod tests {
 
         assert_eq!(feed.snapshot().retained, 10);
         assert_eq!(feed.snapshot().generated, 10);
+    }
+
+    #[test]
+    fn prefill_populates_the_shared_asset_cache() {
+        let feed = feed(1_000, 1_000, 0);
+
+        feed.reload();
+
+        let snapshot = feed.snapshot();
+        assert!(snapshot.asset_entries > 0);
+        assert!(snapshot.asset_entries <= snapshot.asset_capacity);
+        assert!(snapshot.asset_hits > 0, "repeated emotes should hit");
+        assert!(snapshot.asset_misses > 0, "first use of each emote misses");
     }
 }

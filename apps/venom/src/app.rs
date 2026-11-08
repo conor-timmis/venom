@@ -148,6 +148,10 @@ fn report(stage: &str, elapsed: Duration, snapshot: &FeedSnapshot) {
         last_insert_micros = snapshot.last_insert_micros,
         worst_insert_micros = snapshot.worst_insert_micros,
         rate = snapshot.rate,
+        asset_entries = snapshot.asset_entries,
+        asset_capacity = snapshot.asset_capacity,
+        asset_hits = snapshot.asset_hits,
+        asset_misses = snapshot.asset_misses,
         "synthetic feed report"
     );
 }

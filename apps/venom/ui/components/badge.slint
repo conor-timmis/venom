@@ -1,0 +1,27 @@
+import { ChatBadgeKind } from "../types.slint";
+
+// Short platform badge rendered before the author name.
+export component BadgeView inherits Rectangle {
+    in property <string> label;
+    in property <ChatBadgeKind> kind;
+
+    height: 14px;
+    width: max(24px, text.preferred-width + 8px);
+    border-radius: 3px;
+    background: root.kind == ChatBadgeKind.broadcaster ? #e91916
+        : root.kind == ChatBadgeKind.moderator ? #00a859
+        : root.kind == ChatBadgeKind.vip ? #e005b9
+        : root.kind == ChatBadgeKind.subscriber ? #7d4dff
+        : root.kind == ChatBadgeKind.prime ? #1f8efa
+        : root.kind == ChatBadgeKind.staff ? #d6b800
+        : #5b6272;
+
+    text := Text {
+        text: root.label;
+        color: root.kind == ChatBadgeKind.staff ? #14161c : #ffffff;
+        font-size: 9px;
+        font-weight: 800;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}

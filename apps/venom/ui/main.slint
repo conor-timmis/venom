@@ -16,6 +16,7 @@ export component MainWindow inherits Window {
     in-out property <string> evicted-label: "0";
     in-out property <int> last-insert-micros: 0;
     in-out property <int> worst-insert-micros: 0;
+    in-out property <string> asset-cache-label: "";
     in-out property <int> rows-created: 0;
     in-out property <int> live-rate: 0;
     in-out property <bool> follow-output: true;
@@ -78,6 +79,13 @@ export component MainWindow inherits Window {
 
                 Text {
                     text: "insert \{root.last-insert-micros} us  ·  worst \{root.worst-insert-micros} us";
+                    color: Theme.text-muted;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                }
+
+                Text {
+                    text: root.asset-cache-label;
                     color: Theme.text-muted;
                     font-size: 11px;
                     vertical-alignment: center;

@@ -1,10 +1,46 @@
 // Shared values passed from Rust into the chat list.
+
+export enum ChatSegmentKind {
+    text,
+    emote,
+    link,
+    mention,
+}
+
+export enum ChatBadgeKind {
+    broadcaster,
+    moderator,
+    vip,
+    subscriber,
+    prime,
+    staff,
+    other,
+}
+
+export struct ChatBadge {
+    label: string,
+    kind: ChatBadgeKind,
+}
+
+export struct ChatSegment {
+    kind: ChatSegmentKind,
+    text: string,
+    // One frame for static emotes, a frame sequence for animated ones.
+    frames: [image],
+    frame-delay: int,
+}
+
+export struct ChatLine {
+    segments: [ChatSegment],
+}
+
 export struct ChatRow {
     platform-label: string,
     platform-accent: color,
     author: string,
     author-color: color,
+    badges: [ChatBadge],
     timestamp: string,
-    body: string,
+    body: [ChatLine],
     reply-preview: string,
 }
