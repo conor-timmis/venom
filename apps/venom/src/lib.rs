@@ -17,6 +17,7 @@ mod generated_ui {
 pub use generated_ui::*;
 
 mod app;
+mod assets;
 mod config;
 mod feed;
 mod format;
